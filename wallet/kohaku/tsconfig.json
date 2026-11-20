@@ -1,0 +1,22 @@
+// Resolved as a bundler does: @kohaku-eth/plugins imports its own files without extensions, which only a bundler
+// resolves, and its declarations name them by the `~/` alias it builds with, which `paths` maps to its dist.
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM"],
+    "declaration": true,
+    "sourceMap": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": [],
+    "paths": {
+      "~/*": ["./node_modules/@kohaku-eth/plugins/dist/*"]
+    }
+  },
+  "include": ["src"]
+}

@@ -1,0 +1,91 @@
+type Action = variant {
+  // Write-once slot. An `Outgoing` one records a payment to a receive code, which opens no channel.
+  Put : record { id : blob; data : blob; kind : Kind };
+  // First contact: append `enc_announcement` to the inbox's announcements and write the sender's
+  // own encrypted outgoing entry. Happens at most once per `outgoing_id`.
+  OpenChannel : record {
+    enc_announcement : blob;
+    enc_outgoing : blob;
+    inbox : blob;
+    outgoing_id : blob;
+  };
+};
+// One audit, logged before the key is derived. It names the auditor that made it, so that records
+// stay attributed when the auditor is replaced.
+type AuditRecord = record {
+  at_ns : nat64;
+  auditor : principal;
+  target : blob;
+  notify_key : blob;
+  transport_public_key : blob;
+};
+// The auditor's request for the vetKey that opens the escrow of `target`'s registration with `notify_key`.
+type AuditRequest = record {
+  target : blob;
+  // Names the registration: the current one or any earlier one.
+  notify_key : blob;
+  transport_public_key : blob;
+};
+type Error = variant {
+  Rejected : text;
+  // The slot already holds different data; the sender should move to the next index.
+  Occupied : blob;
+};
+type InitArgs = record {
+  // The auditor: the Orbit station whose members approve each request for an address's view key.
+  auditor : principal;
+  // vetKD key: "key_1" on mainnet, "test_key_1" for tests. Fixed at install.
+  vetkd_key_name : text;
+};
+// The slot kinds. The numbers key stable memory: never reuse one.
+// Every record of a lane (notes, deposits, burn blocks, receipts) is a lane slot, so that the kind does
+// not tell what was written.
+type Kind = variant { Lane; Outgoing };
+// What `address` registers: its first registration, or one that replaces the current one and expires
+// later. The owner signs all of it at once (EIP-191 over `register_message(..)`).
+type Registration = record {
+  signature : blob;
+  expiry_ns : nat64;
+  // The zERC20 public key (32 bytes) that payments to the address are owned by, on every chain and
+  // token.
+  public_key : blob;
+  address : blob;
+  // X25519 key (32 bytes) senders encrypt channel announcements to. It names the registration:
+  // another root seed has another one.
+  notify_key : blob;
+  // The view key, IBE-encrypted to identity `vetkd_input(address, notify_key)` under
+  // `escrow_public_key`. Only the auditor can have that vetKey derived.
+  escrow : blob;
+};
+type Result = variant { Ok : blob; Err : Error };
+type Result_1 = variant { Ok; Err : Error };
+type Result_2 = variant { Ok : text; Err : text };
+// A stored slot and the time it was first written (a retry keeps the first time).
+type Slot = record { at_ns : nat64; data : blob };
+service : (InitArgs) -> {
+  // The vetKey that opens the escrow of one of the target's registrations, for the auditor alone. Every
+  // request it makes is logged.
+  audit_escrow_key : (AuditRequest) -> (Result);
+  // The vetKD public key owners IBE-encrypt their escrows with. An update, not a query: a single
+  // replica answering with its own key could open every escrow encrypted to it.
+  escrow_public_key : () -> (Result);
+  get_announcements : (blob, nat32, nat32) -> (vec blob) query;
+  // The public audit log. Call it as an update to check that no replica left records out.
+  get_audits : (nat64, nat32) -> (vec AuditRecord) query;
+  // Lane slot ids from position `start`, in the order they were first written (at most 8192).
+  // Readers compute the next id of each of their sequences and match them here, so a refresh costs
+  // the same however many channels a reader has, and asks for no id that is not its own news.
+  get_log : (nat64, nat32) -> (vec blob) query;
+  get_slots : (Kind, vec blob) -> (vec opt Slot) query;
+  // How many lane slots have been written: where a reader that has just read everything starts.
+  log_length : () -> (nat64) query;
+  register : (Registration, nat64) -> (Result_1);
+  // The address's registration with `notify_key` (default: its current one). Senders call it as an
+  // update, so that no single replica can answer with a replaced registration, and check its signature
+  // themselves.
+  registration : (blob, opt blob) -> (opt Registration) query;
+  submit : (vec Action, nat64) -> (Result_1);
+  // The Orbit station's validation method for `audit_escrow_key`: what its approvers see of a request, or
+  // why the request would be rejected.
+  validate_audit_escrow_key : (AuditRequest) -> (Result_2) query;
+}

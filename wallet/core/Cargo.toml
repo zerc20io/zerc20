@@ -1,0 +1,52 @@
+[package]
+name = "zerc20-wallet-core"
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+
+# Its own workspace, like storage/: the attester's image builds from the root workspace, and wallet dependencies stay
+# out of it.
+[workspace]
+
+# Production code neither unwraps nor expects: what can fail returns an error, and the rare invariant no type can carry
+# is an `expect` under a `#[expect]` that gives its reason.
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+# A server's native runner of burn address blocks (`runBurnsOn` in the SDK); wasm-pack builds the library alone.
+[[bin]]
+name = "zerc20-burn-blocks"
+path = "src/bin/burn-blocks.rs"
+
+[dependencies]
+alloy-primitives = { version = "=1.7.3", features = ["serde"] }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.154"
+serde-wasm-bindgen = "=0.6.5"
+wasm-bindgen = "=0.2.129"
+zerc20-attester-proto = { path = "../../backend/attester/proto", features = ["nitro"] }
+zerc20-zkp = { path = "../../zkp", default-features = false }
+
+[dev-dependencies]
+zerc20-attester-proto = { path = "../../backend/attester/proto", features = ["fixtures"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+# Poseidon and the burn proof of work are painfully slow unoptimized.
+[profile.dev.package."*"]
+opt-level = 3
+
+# hpke draws its ephemeral key from getrandom, which in a browser is crypto.getRandomValues
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "=0.4.3", features = ["wasm_js"] }
+
+# ponytail: no wasm-opt (~800KB unoptimized); run it in the release pipeline if the size starts to matter
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false

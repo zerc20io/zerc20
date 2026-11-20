@@ -1,0 +1,21 @@
+name = "zerc20"
+defaultTargets = ["Zerc20"]
+testDriver = "vectors"
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "c5ea00351c28e24afc9f0f84379aa41082b1188f"
+
+[[require]]
+name = "sonobe"
+git = "https://github.com/kbizikav/sonobe"
+rev = "10c8d4d7099bf6c5b25f65d9070e1d5ec58e78bd"
+subDir = "lean"
+
+[[lean_lib]]
+name = "Zerc20"
+
+[[lean_exe]]
+name = "vectors"
+root = "Vectors"

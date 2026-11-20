@@ -1,0 +1,6 @@
+/node_modules
+/target
+/zkp/artifacts/
+.DS_Store
+TODO.md
+.vercel

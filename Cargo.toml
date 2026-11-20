@@ -1,0 +1,30 @@
+[workspace]
+members = [
+    "zkp",
+    "backend/common",
+    "backend/indexer",
+    "backend/root-prover",
+    "backend/asp",
+    "backend/attester",
+    "backend/attester/proto",
+    "backend/enclave",
+    "backend/merge-prover",
+    "backend/transact-relayer",
+    "backend/deposit-relayer",
+    "backend/watcher",
+    "backend/treasurer",
+]
+resolver = "2"
+
+# Production code neither unwraps nor expects: what can fail returns an error, and the rare invariant no type can carry
+# is an `expect` under a `#[expect]` that gives its reason.
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+
+# Poseidon, the burn proof of work and Nova folding are painfully slow unoptimized: the tests take a minute instead of
+# ten. "*" is every dependency, and zkp, as a member, needs naming.
+[profile.dev.package."*"]
+opt-level = 3
+[profile.dev.package.zerc20-zkp]
+opt-level = 3

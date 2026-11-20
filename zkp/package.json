@@ -1,0 +1,36 @@
+{
+  "name": "zerc20-circuits",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "npm@11.16.0",
+  "engines": {
+    "node": ">=24.18.0 <25",
+    "npm": "11.16.0"
+  },
+  "scripts": {
+    "vectors:gen": "node test-vectors/gen_circuit_vectors.mjs",
+    "vectors:check": "node test-vectors/gen_circuit_vectors.mjs --check",
+    "install:picus": "./scripts/install_picus.sh",
+    "picus:toolchain:check": "node scripts/picus_toolchain.mjs check-config",
+    "check:circuits": "PICUS_SUMMARY_ONLY=1 PICUS_REQUIRE_DECISIVE=1 ./scripts/check_circuits.sh",
+    "inspect:circom": "./scripts/check_circuits.sh --skip-picus",
+    "test:scripts": "node --test scripts/*.test.mjs",
+    "artifacts:setup": "node scripts/artifacts.mjs setup",
+    "artifacts:upload": "node scripts/artifacts.mjs upload"
+  },
+  "devDependencies": {
+    "circomlib": "2.0.5",
+    "circomlibjs": "0.1.7",
+    "r1csfile": "0.0.48",
+    "snarkjs": "0.7.6"
+  },
+  "overrides": {
+    "brace-expansion": "5.0.12",
+    "minimatch": "10.2.5",
+    "underscore": "1.13.8",
+    "ws": "8.21.1"
+  },
+  "allowScripts": {
+    "blake-hash@2.0.0": true
+  }
+}

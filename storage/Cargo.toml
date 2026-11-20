@@ -1,0 +1,20 @@
+[workspace]
+resolver = "2"
+members = ["canister"]
+
+# Production code neither unwraps nor expects: what can fail returns an error, and what the canister cannot recover
+# from, such as stable memory that does not decode, traps with its reason.
+[workspace.lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+
+# PoW solving and ECDSA are painfully slow unoptimized; keep test runs fast.
+[profile.dev.package."*"]
+opt-level = 3
+[profile.dev.package.zerc20_storage]
+opt-level = 3

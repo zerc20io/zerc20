@@ -1,0 +1,21 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["dependencies"]
+solc_version = "0.8.37"
+evm_version = "prague"
+optimizer = true
+optimizer_runs = 200
+bytecode_hash = "none"
+ignored_warnings_from = ["dependencies", "src/verifiers/generated"]
+fs_permissions = [{ access = "read-write", path = "./deployments" }]
+
+[lint]
+ignore = ["src/verifiers/generated/*.sol"]
+# keccak256 stays Solidity: what inline assembly saves is a little gas, and costs every reader the check
+exclude_lints = ["asm-keccak256"]
+
+[dependencies]
+forge-std = "1.17.0"
+openzeppelin-contracts = { version = "5.7.0", git = "https://github.com/OpenZeppelin/openzeppelin-contracts.git", tag = "v5.7.0" }
+openzeppelin-contracts-upgradeable = { version = "5.7.0", git = "https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable.git", tag = "v5.7.0" }

@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>zERC20 wallet demo</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --line: #8884;
+        --error: #d33;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        gap: 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 15px;
+        margin: 0 0 8px;
+      }
+      .error {
+        color: var(--error);
+      }
+      .hint {
+        margin: 0;
+        opacity: 0.7;
+      }
+      fieldset {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        min-width: 0;
+      }
+      aside fieldset {
+        display: grid;
+        gap: 6px;
+      }
+      .forms {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+        margin: 16px 0 24px;
+      }
+      /* one card, as wide as one of several */
+      .forms.one {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        margin: 0;
+      }
+      .forms form,
+      aside {
+        display: grid;
+        gap: 6px;
+        align-content: start;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      aside {
+        position: sticky;
+        top: 16px;
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
+      }
+      input,
+      select,
+      textarea,
+      button {
+        font: inherit;
+        min-width: 0;
+      }
+      .out {
+        overflow-wrap: anywhere;
+      }
+      .scroll {
+        overflow-x: auto;
+        margin-bottom: 24px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        white-space: nowrap;
+      }
+      th,
+      td {
+        padding: 4px 8px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+      }
+      .mono,
+      textarea,
+      pre {
+        font-family: ui-monospace, monospace;
+      }
+      #prompts,
+      #flow-steps {
+        padding-left: 20px;
+        margin: 0;
+      }
+      #flow-steps li {
+        margin-bottom: 8px;
+      }
+      dialog {
+        width: min(560px, calc(100vw - 32px));
+        border: 1px solid var(--line);
+        border-radius: 12px;
+      }
+      dialog pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        max-height: 50vh;
+        overflow-y: auto;
+      }
+      /* what deposits wait on, while they do */
+      #steps-box {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        max-width: 380px;
+        padding: 12px 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: Canvas;
+        box-shadow: 0 4px 16px #0003;
+      }
+      #steps {
+        margin: 0;
+        padding-left: 18px;
+      }
+      dialog menu {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <main>
+        <h1>zERC20 wallet demo</h1>
+        <p>Open another tab with another account to pay it; reload to switch accounts.</p>
+        <form id="connect">
+          <fieldset>
+            <p>
+              <button type="button" id="connect-browser">Connect your browser wallet</button>
+              <span id="no-browser-wallet" class="hint" hidden
+                >No browser wallet (MetaMask, ...) found in this browser.</span
+              >
+            </p>
+            <p id="test-key">
+              Or a test key:
+              <input
+                name="key"
+                class="mono"
+                list="keys"
+                size="70"
+                placeholder="Test private key 0x…"
+                pattern="0x[0-9a-fA-F]{64}"
+                required
+              />
+              <datalist id="keys"></datalist>
+              <button>Connect</button>
+            </p>
+          </fieldset>
+        </form>
+        <p id="running"></p>
+        <p id="error" class="error"></p>
+
+        <section id="app" hidden>
+          <p>
+            Address <span id="address" class="mono"></span> · chain
+            <select id="chain"></select>
+            · token
+            <select id="token"></select>
+            · synced <span id="synced">-</span> <span id="sync-error" class="error"></span>
+          </p>
+
+          <h2>Balances</h2>
+          <div class="scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Token</th>
+                  <th>Spendable</th>
+                  <th>Pending</th>
+                  <th>Blocked</th>
+                </tr>
+              </thead>
+              <tbody id="balances"></tbody>
+            </table>
+          </div>
+
+          <h2>Activity</h2>
+          <div class="scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Kind</th>
+                  <th>Amount</th>
+                  <th>Counterparty</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="activity"></tbody>
+            </table>
+          </div>
+
+          <h2>Coins</h2>
+          <p class="hint">Check some to consolidate only those.</p>
+          <div class="scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Id</th>
+                  <th>Kind</th>
+                  <th>Amount</th>
+                  <th>State</th>
+                  <th>From</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="coins"></tbody>
+            </table>
+            <output id="exit-out" class="out"></output>
+          </div>
+          <!-- enabled once the first sync has found the tokens -->
+          <fieldset class="actions" disabled>
+            <div class="forms one">
+              <form id="consolidate">
+                <h2>Consolidate</h2>
+                <p class="hint">The coins checked above, or all, into one note.</p>
+                <button value="quote">Quote fee</button>
+                <button value="consolidate">Consolidate</button>
+                <output class="out"></output>
+              </form>
+            </div>
+          </fieldset>
+
+          <fieldset class="actions" disabled>
+            <div class="forms">
+              <form id="deposit">
+                <h2>Deposit</h2>
+                <input name="amount" placeholder="Amount" inputmode="decimal" />
+                <button value="deposit">Deposit</button>
+                <button value="address">Get a deposit address</button>
+                <output class="out mono"></output>
+              </form>
+              <form id="send">
+                <h2>Send privately</h2>
+                <input name="to" class="mono" placeholder="To: an address or a receive code" required />
+                <input name="amount" placeholder="Amount" inputmode="decimal" required />
+                <button value="quote">Quote fee</button>
+                <button value="send">Send</button>
+                <output class="out"></output>
+              </form>
+              <form id="withdraw">
+                <h2>Withdraw publicly</h2>
+                <input name="to" class="mono" placeholder="To 0x…" pattern="0x[0-9a-fA-F]{40}" required />
+                <input name="amount" placeholder="Amount" inputmode="decimal" required />
+                <button value="quote">Quote fee</button>
+                <button value="withdraw">Withdraw</button>
+                <output class="out"></output>
+              </form>
+              <form id="request">
+                <h2>Receive</h2>
+                <p class="hint">One code per payer.</p>
+                <button value="request">Get a receive code</button>
+                <textarea class="out" rows="6" readonly placeholder="The code, for the payer"></textarea>
+              </form>
+            </div>
+          </fieldset>
+
+          <section id="pos-section">
+            <h2>Point of sale</h2>
+            <p class="hint">
+              Hand out payment addresses one per sale, and pay them from another tab. The point of sale records its
+              addresses itself, six at a time, with a key the wallet gives it, and can spend none of it; the wallet
+              merges what arrives (Consolidate). The first sale of a token waits for its addresses' proof of work: some
+              seconds.
+            </p>
+            <fieldset class="actions" disabled>
+              <div class="forms one">
+                <form id="pos">
+                  <h2>Sales</h2>
+                  <input name="amount" placeholder="Amount asked (optional)" inputmode="decimal" />
+                  <button value="burn">New zERC20 payment address</button>
+                  <button value="deposit">New underlying-asset payment address</button>
+                  <button value="status">Check the sales</button>
+                  <textarea
+                    class="out mono"
+                    rows="3"
+                    readonly
+                    placeholder="Each address to pay, then what reached it"
+                  ></textarea>
+                </form>
+              </div>
+            </fieldset>
+            <h2>Payments</h2>
+            <div class="scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Id</th>
+                    <th>Address</th>
+                    <th>Amount</th>
+                    <th>Sender</th>
+                    <th>State</th>
+                  </tr>
+                </thead>
+                <tbody id="payments"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <h2>Operations</h2>
+          <div class="scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Id</th>
+                  <th>Kind</th>
+                  <th>Status</th>
+                  <th>Transactions</th>
+                  <th>Error</th>
+                </tr>
+              </thead>
+              <tbody id="operations"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <aside>
+        <h2 id="wallet-title">Demo wallet</h2>
+        <p id="wallet-hint" class="hint">Asks before every signature and transaction.</p>
+        <div id="account" class="mono out">not connected</div>
+        <div id="public"></div>
+        <p><b id="signatures">0</b> signatures · <b id="transactions">0</b> transactions asked</p>
+        <section id="mint-section" hidden>
+          <h2>Test tokens</h2>
+          <div id="mints"></div>
+          <output id="mint-out" class="out mono"></output>
+        </section>
+        <form id="transfer" hidden>
+          <fieldset>
+            <h2>Pay from this account</h2>
+            <input
+              name="to"
+              class="mono"
+              placeholder="To 0x… (e.g. a deposit or burn address)"
+              pattern="0x[0-9a-fA-F]{40}"
+              required
+            />
+            <input name="amount" placeholder="Amount" inputmode="decimal" required />
+            <button id="send-underlying" value="underlying">Send</button>
+            <button id="wrap-there" value="wrap">Wrap there</button>
+            <output class="out mono"></output>
+          </fieldset>
+        </form>
+        <h2>Requests</h2>
+        <ol id="prompts" reversed></ol>
+      </aside>
+    </div>
+
+    <dialog id="prompt">
+      <form method="dialog">
+        <h2 id="prompt-title"></h2>
+        <pre id="prompt-body"></pre>
+        <menu>
+          <button value="reject">Reject</button>
+          <button value="approve" autofocus>Approve</button>
+        </menu>
+      </form>
+    </dialog>
+    <div id="steps-box" hidden>
+      <h2>Waiting on</h2>
+      <ul id="steps"></ul>
+    </div>
+    <!-- a payment no single JoinSplit pays: consolidate, then pay, each step's transactions shown as they go -->
+    <dialog id="flow">
+      <form method="dialog">
+        <h2 id="flow-title"></h2>
+        <p class="hint">Your coins are merged into one note first.</p>
+        <ol id="flow-steps"></ol>
+        <menu>
+          <button id="flow-close" value="close">Cancel</button>
+          <button id="flow-go" autofocus>Consolidate, then pay</button>
+        </menu>
+      </form>
+    </dialog>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

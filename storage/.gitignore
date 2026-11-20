@@ -1,0 +1,5 @@
+/target
+/.dfx
+/.claude
+/sdk/node_modules
+/sdk/dist

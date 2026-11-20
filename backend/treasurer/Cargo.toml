@@ -1,0 +1,19 @@
+[package]
+name = "zerc20-treasurer"
+version = "0.1.0"
+edition = "2024"
+license = "BUSL-1.1"
+
+[lints]
+workspace = true
+
+[dependencies]
+alloy = { version = "=2.5.0", features = ["provider-http", "rpc-types", "reqwest", "contract", "signer-local"] }
+anyhow = "=1.0.104"
+tokio = { version = "=1.53.3", features = ["full"] }
+tracing = "=0.1.44"
+zerc20-common = { path = "../common" }
+zerc20-zkp = { path = "../../zkp" }
+
+[dev-dependencies]
+serde_json = "=1.0.154"

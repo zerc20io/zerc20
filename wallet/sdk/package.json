@@ -1,0 +1,64 @@
+{
+  "name": "@zerc20/wallet-sdk",
+  "version": "0.8.0",
+  "description": "A zERC20 wallet for browsers and Node: deposits, private payments, withdrawals and rage exits.",
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerc20io/zERC20v2.git",
+    "directory": "wallet/sdk"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "wasm"
+  ],
+  "scripts": {
+    "wasm": "wasm-pack build ../core --target web --out-dir ../sdk/wasm --no-pack --release && rm -f wasm/.gitignore",
+    "build": "npm run wasm && tsc -p tsconfig.json",
+    "prepack": "npm run build",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc -p demo",
+    "test": "vitest run --config vitest.config.ts",
+    "test:e2e": "scripts/e2e.sh",
+    "demo": "vite demo"
+  },
+  "dependencies": {
+    "@noble/ciphers": "^2.3.0",
+    "@noble/curves": "^2.3.0",
+    "@noble/hashes": "^2.3.0",
+    "@scure/base": "^2.4.0",
+    "@scure/bip39": "^2.4.0",
+    "@zerc20/storage-sdk": "file:../../storage/sdk",
+    "snarkjs": "0.7.6"
+  },
+  "peerDependencies": {
+    "viem": "^2.57.7"
+  },
+  "devDependencies": {
+    "@dfinity/pic": "0.25.0",
+    "@icp-sdk/core": "^6.1.1",
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3",
+    "viem": "2.57.7",
+    "vite": "8.3.4",
+    "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "overrides": {
+    "underscore": "1.13.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

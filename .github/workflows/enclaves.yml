@@ -1,0 +1,52 @@
+# Builds the enclaves' EIFs with backend/eif.sh and prints their PCR0s. A tag enclave-<name>-<PCR0> names the commit
+# that builds a published PCR0, and its push fails here unless this build measures that PCR0: a second machine beside
+# the instance that built the EIF the network runs, with a log anyone with the repository can read. It also runs by
+# hand, and on a pull request that changes the build. The action is pinned by commit: a tag can be moved.
+name: Enclaves
+on:
+  workflow_dispatch:
+  push:
+    tags: ["enclave-*"]
+  pull_request:
+    paths:
+      - .github/workflows/enclaves.yml
+      - backend/eif.sh
+      - backend/nitro-cli.Dockerfile
+      - backend/attester/Dockerfile
+      - backend/merge-prover/Dockerfile
+permissions:
+  contents: read
+concurrency: # a new push to a pull request cancels the run on its previous commit
+  group: enclaves-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  eif:
+    # arm64, as the instances are, so nothing is emulated
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build and measure
+        run: |
+          # a tag of an enclave's builds that enclave and names what it must measure; anything else builds both
+          want=
+          case $GITHUB_REF_TYPE:$GITHUB_REF_NAME in
+            tag:enclave-attester-*) names=attester want=$GITHUB_REF_NAME ;;
+            tag:enclave-merge-prover-*) names=merge-prover want=$GITHUB_REF_NAME ;;
+            *) names="attester merge-prover" ;;
+          esac
+          for name in $names; do
+            setup=
+            if [ "$name" = merge-prover ]; then
+              # The merge setup the committed verifier names, from the testnet's CDN, which serves every setup. Its
+              # key hashes are compiled into the merge prover, so a setup.json that is not the setup's builds a PCR0
+              # no tag names.
+              id=$(sed -n 's/.*(setup \([^)]*\)).*/\1/p' contracts/src/verifiers/generated/MergeNovaVerifier.sol)
+              setup=$RUNNER_TEMP/setup.json
+              curl -fsS --retry 3 --compressed -o "$setup" "https://artifacts.testnet-v2.zerc20.io/merge/$id/setup.json"
+            fi
+            pcr0=$(backend/eif.sh "$name" "$RUNNER_TEMP/$name.eif" $setup)
+            echo "$name PCR0 $pcr0" | tee -a "$GITHUB_STEP_SUMMARY"
+            [ -z "$want" ] || [ "enclave-$name-$pcr0" = "$want" ] ||
+              { echo "this commit does not build the PCR0 $want names" >&2; exit 1; }
+          done

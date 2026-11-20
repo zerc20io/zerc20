@@ -1,0 +1,6 @@
+out/
+cache/
+dependencies/
+broadcast/
+deployments/31337.json
+deployments/indexer-fixture.json

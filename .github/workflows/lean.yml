@@ -1,0 +1,27 @@
+# Builds the Lean proofs and runs the spec on the circuits' test vectors, for each pull request and each push to dev and
+# main that changes them. lake build fails on a broken proof and, as Main.lean pins each theorem's axioms, on a sorry or
+# an added axiom. The build takes far longer than the other checks, so it runs only when its inputs change. Mathlib
+# comes from Mathlib's own cache. The GitHub cache stays off: lean-action would save all of .lake, Mathlib included, for
+# every commit, and push the Rust caches out of GitHub's 10 GB. The action is pinned by commit: a tag can be moved.
+name: Lean
+on:
+  pull_request:
+    paths: [lean/**, zkp/test-vectors/**, .github/workflows/lean.yml]
+  push:
+    branches: [dev, main]
+    paths: [lean/**, zkp/test-vectors/**, .github/workflows/lean.yml]
+permissions:
+  contents: read
+concurrency: # a new push to a pull request cancels the run on its previous commit
+  group: lean-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+jobs:
+  lean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # lake build, then lake test, as the package names a test driver
+      - uses: leanprover/lean-action@24581d74d674803a25a81b10b059c5c0cdd344c6 # v1.6.2
+        with:
+          lake-package-directory: lean
+          use-github-cache: false

@@ -1,0 +1,53 @@
+[package]
+name = "zerc20-zkp"
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+
+[lints]
+workspace = true
+
+[features]
+default = ["parallel"]
+parallel = [
+    "sonobe-primitives/parallel",
+    "sonobe-fs/parallel",
+    "sonobe-ivc/parallel",
+    "sonobe-snarks/parallel",
+]
+
+[dependencies]
+ark-bn254 = { version = "=0.6.0", default-features = false, features = ["curve"] }
+ark-crypto-primitives = { version = "=0.6.0", default-features = false, features = ["crh", "sponge", "constraints"] }
+ark-ec = { version = "=0.6.0", default-features = false }
+ark-ed-on-bn254 = { version = "=0.6.0", default-features = false, features = ["r1cs"] }
+ark-ff = { version = "=0.6.0", default-features = false }
+ark-grumpkin = { version = "=0.6.0", default-features = false }
+ark-r1cs-std = { version = "=0.6.0", default-features = false }
+ark-relations = { version = "=0.6.0", default-features = false }
+ark-serialize = { version = "=0.6.0", default-features = false, features = ["derive"] }
+ark-std = "=0.6.0"
+askama = "=0.16.1"
+# ark-std's rand 0.8 takes rand_core 0.6, which is rand_chacha 0.3's.
+rand_chacha = "=0.3.1"
+sha2 = "=0.11.0"
+sonobe-primitives = { git = "https://github.com/kbizikav/sonobe", rev = "10c8d4d7099bf6c5b25f65d9070e1d5ec58e78bd" }
+sonobe-fs = { git = "https://github.com/kbizikav/sonobe", rev = "10c8d4d7099bf6c5b25f65d9070e1d5ec58e78bd" }
+# Pinned by rev, the rev lean/lakefile.toml takes sonobe's Lean proofs from: they cover this Nova, its
+# Poseidon transcript and the decider, so the two pins move together.
+# ark-std/print-trace (opt-in in sonobe) writes Groth16 progress to stdout, where a binary prints
+# the results a script reads, so features stay explicit.
+sonobe-ivc = { git = "https://github.com/kbizikav/sonobe", rev = "10c8d4d7099bf6c5b25f65d9070e1d5ec58e78bd", default-features = false, features = [
+    "evm",
+] }
+sonobe-snarks = { git = "https://github.com/kbizikav/sonobe", rev = "10c8d4d7099bf6c5b25f65d9070e1d5ec58e78bd" }
+thiserror = "=2.0.21"
+
+[dev-dependencies]
+serde_json = "=1.0.154"
+
+# Minutes long, so it runs by name only (`--test nova_ivc -- --ignored`). In a bare cargo test it would only be built,
+# and with it, as for any integration test, the package's binaries, all at opt-level 3.
+[[test]]
+name = "nova_ivc"
+test = false

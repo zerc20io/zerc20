@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>zerc20-storage demo</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --line: #8884;
+        --new: #fd04;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 20px;
+      }
+      h2 {
+        font-size: 15px;
+        margin: 0 0 8px;
+      }
+      #status {
+        min-height: 1.5em;
+      }
+      #status.error {
+        color: #d33;
+      }
+      .forms {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 12px;
+        margin: 16px 0 24px;
+      }
+      form {
+        display: grid;
+        gap: 6px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      input,
+      select,
+      textarea,
+      button {
+        font: inherit;
+        min-width: 0;
+      }
+      .scroll {
+        overflow-x: auto;
+        margin-bottom: 24px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        white-space: nowrap;
+      }
+      th,
+      td {
+        padding: 4px 8px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+      }
+      tr.new {
+        background: var(--new);
+      }
+      .mono,
+      td input {
+        font-family: ui-monospace, monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>zerc20-storage demo</h1>
+      <p>Pseudo payments: notes are written to the canister, and nothing happens on chain.</p>
+      <button id="connect">Connect MetaMask</button>
+      <p id="status"></p>
+
+      <section id="app" hidden>
+        <p>
+          Address <input id="address" class="mono" size="44" readonly /> · updated <span id="updated">-</span> (every 3
+          s)
+        </p>
+
+        <div class="forms">
+          <form id="send">
+            <h2>Send</h2>
+            <input name="to" class="mono" placeholder="To 0x…" pattern="0x[0-9a-fA-F]{40}" required />
+            <select name="chain">
+              <option>1</option>
+              <option>10</option>
+            </select>
+            <label>Token id <input name="token" type="number" min="0" max="4294967295" value="1" required /></label>
+            <input name="amount" type="number" min="1" placeholder="Amount" required />
+            <input name="change" type="number" min="1" placeholder="Change to self (optional)" />
+            <button>Send</button>
+          </form>
+          <form id="merge">
+            <h2>Merge (to self)</h2>
+            <select name="chain">
+              <option>1</option>
+              <option>10</option>
+            </select>
+            <label>Token id <input name="token" type="number" min="0" max="4294967295" value="1" required /></label>
+            <input name="amount" type="number" min="1" placeholder="Merged amount" required />
+            <button>Record</button>
+          </form>
+          <form id="issue">
+            <h2>Record a receive code</h2>
+            <select name="chain">
+              <option>1</option>
+              <option>10</option>
+            </select>
+            <label>Token id <input name="token" type="number" min="0" max="4294967295" value="1" required /></label>
+            <button>Record</button>
+          </form>
+          <form id="pay">
+            <h2>Pay a receive code</h2>
+            <textarea name="code" class="mono" rows="4" placeholder="Receive code" required></textarea>
+            <input name="amount" type="number" min="1" placeholder="Amount" required />
+            <button>Pay</button>
+          </form>
+        </div>
+
+        <h2>History</h2>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Direction</th>
+                <th>Peer</th>
+                <th>Route</th>
+                <th>Chain</th>
+                <th>Token</th>
+                <th>Amount</th>
+                <th>Receipt</th>
+              </tr>
+            </thead>
+            <tbody id="history"></tbody>
+          </table>
+        </div>
+
+        <h2>Receive codes</h2>
+        <div class="scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Chain</th>
+                <th>Token</th>
+                <th>Payments</th>
+                <th>Code (give it to one payer)</th>
+              </tr>
+            </thead>
+            <tbody id="codes"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

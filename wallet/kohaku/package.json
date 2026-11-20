@@ -1,0 +1,56 @@
+{
+  "name": "@zerc20/kohaku-plugin",
+  "version": "0.2.0",
+  "description": "zERC20 as a Kohaku privacy plugin: shield, private transfers and unshield for wallets built on @kohaku-eth/plugins.",
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerc20io/zERC20v2.git",
+    "directory": "wallet/kohaku"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --config vitest.config.ts",
+    "test:e2e": "scripts/e2e.sh"
+  },
+  "dependencies": {
+    "@scure/base": "^2.4.0",
+    "@zerc20/wallet-sdk": "file:../sdk"
+  },
+  "peerDependencies": {
+    "@kohaku-eth/plugins": "^0.0.1-alpha.20",
+    "viem": "^2.57.7"
+  },
+  "devDependencies": {
+    "@kohaku-eth/plugins": "0.0.1-alpha.20",
+    "@kohaku-eth/provider": "0.1.0-alpha.14",
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3",
+    "viem": "2.57.7",
+    "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "overrides": {
+    "underscore": "1.13.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

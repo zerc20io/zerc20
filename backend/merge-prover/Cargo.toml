@@ -1,0 +1,38 @@
+[package]
+name = "zerc20-merge-prover"
+version = "0.1.0"
+edition = "2024"
+license = "BUSL-1.1"
+
+[lints]
+workspace = true
+
+[features]
+# The Nitro Enclave's binary. A feature keeps vendored OpenSSL out of every other build.
+enclave = ["zerc20-enclave/nitro"]
+
+[[bin]]
+name = "enclave"
+required-features = ["enclave"]
+
+[dependencies]
+alloy-primitives = { version = "=1.7.3", features = ["serde"] }
+anyhow = "=1.0.104"
+axum = "=0.8.9"
+parking_lot = "=0.12.5"
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.154"
+sha2 = "=0.11.0"
+tokio = { version = "=1.53.3", features = ["full"] }
+tracing = "=0.1.44"
+zerc20-attester-proto = { path = "../attester/proto" }
+zerc20-common = { path = "../common" }
+zerc20-enclave = { path = "../enclave" }
+zerc20-zkp = { path = "../../zkp" }
+
+[dev-dependencies]
+# to check merge steps against the circuit's constraints, as zkp/src/merge.rs's tests do
+ark-r1cs-std = { version = "=0.6.0", default-features = false }
+ark-relations = { version = "=0.6.0", default-features = false }
+sonobe-primitives = { git = "https://github.com/kbizikav/sonobe", rev = "10c8d4d7099bf6c5b25f65d9070e1d5ec58e78bd" }
+zerc20-attester-proto = { path = "../attester/proto", features = ["fixtures"] }

@@ -1,0 +1,53 @@
+{
+  "name": "@zerc20/storage-sdk",
+  "version": "0.7.0",
+  "description": "TypeScript SDK for zerc20-storage: private note delivery for zERC20 on the Internet Computer.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerc20io/zERC20v2.git",
+    "directory": "storage/sdk"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --config vitest.config.ts",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "demo": "node demo/serve.ts"
+  },
+  "dependencies": {
+    "@dfinity/vetkeys": "~0.4.0",
+    "@icp-sdk/core": "^6.1.1",
+    "@noble/ciphers": "^2.3.0",
+    "@noble/curves": "^2.3.0",
+    "@noble/hashes": "^2.3.0",
+    "@scure/base": "^2.4.0"
+  },
+  "devDependencies": {
+    "@dfinity/pic": "0.25.0",
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3",
+    "vite": "8.3.4",
+    "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

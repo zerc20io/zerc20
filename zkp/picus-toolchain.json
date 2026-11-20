@@ -1,0 +1,8 @@
+{
+  "schema": "zerc20-picus-toolchain/v1",
+  "repository": "https://github.com/chyanju/picus.git",
+  "revision": "77a783a6e1c3f194c8a60c47657d46d5762f3394",
+  "version": "1.8.22",
+  "cargoPackage": "picus-cli",
+  "cargoPath": "crates/picus-cli"
+}

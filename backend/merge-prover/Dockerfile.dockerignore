@@ -1,0 +1,10 @@
+**/target
+**/node_modules
+**/.env
+**/.env.*
+.git
+contracts
+lean
+storage
+zkp/artifacts
+zkp/build
