@@ -7,14 +7,14 @@ License text copyright © 2017 MariaDB Corporation Ab, All Rights Reserved.
 
 Parameters
 
-Licensor:             zERC20
+Licensor:             zERC20 Limited
 
 Licensed Work:        The zERC20 nodes: the source code in this directory
                       (backend/) of the repository at
                       https://github.com/zerc20io/zerc20, except
                       attester/proto/, which the repository's own license
                       covers.
-                      The Licensed Work is © 2026 zERC20.
+                      The Licensed Work is © 2026 zERC20 Limited.
 
 Additional Use Grant: You may make production use of the Licensed Work to run
                       nodes of a zERC20 network that the Licensor has
