@@ -338,7 +338,8 @@ export interface Operation {
   /** Syncs until the operation is in a block: a deposit's transaction, a payment's or withdrawal's JoinSplit, or a
    * consolidation's merges once nothing is left to merge, its note under a proved root. A reorg may still drop it, and
    * the wallet's syncs then send it again: it stays `pending` until final, which `until: 'final'` waits for, minutes
-   * later on a chain slow to finalize. Throws if it fails. */
+   * later on a chain slow to finalize. Throws if the operation fails, and not for a chain or server out of reach
+   * meanwhile, which `retrying` tells of where it holds the operation back. */
   wait(options?: { until?: 'mined' | 'final' }): Promise<void>;
   /** Ends it while `cancellable`, and does nothing once it is cancelled: it paid nothing, its notes and deposits are free
    * again, it leaves `operations()` and `activity()`, and `wait()` throws `cancelled`. Throws otherwise, and when the
@@ -1173,7 +1174,9 @@ export class Wallet {
         for (;;) {
           if (reached()) return;
           if (op.status === 'failed') throw new WalletError(op.errorCode ?? 'invalid', op.error ?? 'failed');
-          await this.sync();
+          // a sync that could not read everything has still taken the operation as far as it goes, and what holds the
+          // operation itself back is its `retrying`: only a wallet that is closed ends the wait
+          await this.sync().catch(() => this.#closed.signal.throwIfAborted());
           if (!reached() && op.status === 'pending') await new Promise((r) => setTimeout(r, 15_000));
         }
       },

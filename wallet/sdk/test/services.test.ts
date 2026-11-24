@@ -1,10 +1,10 @@
 import { x25519 } from '@noble/curves/ed25519.js';
-import { bytesToHex } from 'viem';
+import { bytesToHex, hexToBytes } from 'viem';
 import { beforeAll, expect, test } from 'vitest';
 import { Chain } from '../src/chain.js';
 import { initCore } from '../src/core.js';
 import { type ChainConfig, LOCAL_CHAIN_ID } from '../src/network.js';
-import { attest, relay } from '../src/services.js';
+import { attest, enclaveKey, relay } from '../src/services.js';
 
 const config = {
   chainId: LOCAL_CHAIN_ID,
@@ -55,4 +55,25 @@ test('a relay refused for a nullifier spent already says so, whatever else the r
     answer = new Response(body, { status: 400 });
     expect(await relay(chain, {})).toEqual({ reverted: body, spent });
   }
+});
+
+test('a local merge prover names its key with no document on a real chain, and is asked nothing off this machine', async () => {
+  const asked: string[] = [];
+  const real = new Chain(
+    { ...config, chainId: 1n },
+    {
+      fetch: ((url) => {
+        asked.push(String(url));
+        return Promise.resolve(Response.json({ publicKey, attestation: null }));
+      }) as typeof fetch,
+    },
+  );
+  const key = await enclaveKey(real, 'http://127.0.0.1:3006/enclave', { local: true }, 'merge prover');
+  expect(key).toEqual(hexToBytes(publicKey));
+  await expect(
+    enclaveKey(real, 'https://prover.example/enclave', { local: true }, 'merge prover'),
+  ).rejects.toMatchObject({
+    code: 'attester-unverified',
+  });
+  expect(asked).toEqual(['http://127.0.0.1:3006/enclave']);
 });

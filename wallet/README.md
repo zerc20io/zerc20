@@ -5,6 +5,8 @@ A zERC20 wallet for browsers and Node.
 - **`sdk/`** (`@zerc20/wallet-sdk`): the TypeScript SDK apps use. It does all I/O.
 - **`kohaku/`** (`@zerc20/kohaku-plugin`): the SDK as a [Kohaku](https://github.com/ethereum/kohaku) privacy plugin, so
   that wallets built on Kohaku offer zERC20 beside its other protocols.
+- **`cli/`** (`@zerc20/cli`): the SDK from a terminal, as the `zerc20` command: an account watched by its view key or
+  paid from by its recovery phrase, and a merge prover run on the machine itself.
 - **`core/`**: the protocol's computations (keys, tags, paths, the attester's witness check, sealing), in the same
   Rust as the circuits and the attester, compiled to wasm. One implementation means the wallet cannot drift from
   what the attester accepts. It is its own workspace, so the attester's image never builds wallet code.
@@ -19,6 +21,8 @@ How an app uses the SDK is at [docs.zerc20.io](https://docs.zerc20.io/developers
 - The attester and the merge prover get a witness sealed to their enclave. The wallet takes the enclave's key only
   from an attestation document that chains to the AWS Nitro root and measures the published PCR0.
 - `Wallet.open` refuses a network that would weaken this: plain HTTP, or a development enclave, off the local chain.
+  A merge prover with no enclave passes at a loopback address alone: one the wallet's own machine runs, which holds
+  the witness already.
 
 **Servers are not trusted with what they serve.**
 

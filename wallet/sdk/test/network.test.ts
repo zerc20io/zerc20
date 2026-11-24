@@ -48,3 +48,12 @@ test('a network passes only with what production needs: https, a pinned Nitro ro
   expect(code(network({ attesterTrust: { pcr0: '00'.repeat(48), rootSha256: NITRO_ROOT_SHA256 } }))).toBe('invalid');
   expect(code(network({ attesterTrust: { pcr0: 'ab'.repeat(48), rootSha256: '00'.repeat(32) } }))).toBe('invalid');
 });
+
+test('a local merge prover passes on a real network at a loopback address only, and an attester never as local', () => {
+  const withProver = (url: string): Network => ({ ...network({}), mergeProver: { url, trust: { local: true } } });
+  expect(code(withProver('http://127.0.0.1:3006'))).toBeUndefined();
+  expect(code(withProver('http://localhost:3006'))).toBeUndefined();
+  expect(code(withProver('https://prover.example'))).toBe('invalid');
+  expect(code(withProver('http://192.168.1.5:3006'))).toBe('invalid');
+  expect(code(network({ attester: 'http://127.0.0.1:3001', attesterTrust: { local: true } as never }))).toBe('invalid');
+});

@@ -6,7 +6,7 @@ import { type Address, type Hex, bytesToHex, getAddress, hexToBytes, toFunctionS
 import { type Chain, type Referrer, type Refund, factoryArgs } from './chain.js';
 import { core } from './core.js';
 import { WalletError, fail } from './errors.js';
-import { type AttesterTrust, LOCAL_CHAIN_ID, type Network } from './network.js';
+import { LOCAL_CHAIN_ID, type Network, type ProverTrust, loopback } from './network.js';
 
 /** A transact witness is sealed padded to this, and a merge's to `MERGE_PAD` per input, so its size does not leak the
  * amounts' digits (`backend/attester/README.md`). */
@@ -42,10 +42,15 @@ export const attesterKey = (chain: Chain): Promise<Uint8Array> =>
   enclaveKey(chain, `${chain.config.attester}/attestation`, chain.config.attesterTrust, 'attester');
 
 /** The key an enclave (the attester's, the merge prover's) opens what is sealed to it with, from `url`, once its
- * attestation document checks out against `trust`. */
-export async function enclaveKey(chain: Chain, url: string, trust: AttesterTrust, what: string): Promise<Uint8Array> {
+ * attestation document checks out against `trust`; a local merge prover's, as it names it. */
+export async function enclaveKey(chain: Chain, url: string, trust: ProverTrust, what: string): Promise<Uint8Array> {
+  // before anything is asked of it: off this machine, a server with no document is a host that would read the witness,
+  // whatever the flag says
+  if ('local' in trust && (trust.local !== true || !loopback(url)))
+    return fail('attester-unverified', `a local ${what} off this machine`);
   const r = await call<{ publicKey: Hex; attestation: string | null }>(chain, url);
   if (typeof r.body === 'string') return fail('unavailable', `${what}: ${r.body}`);
+  if ('local' in trust) return hexToBytes(r.body.publicKey);
   if ('development' in trust) {
     // its host would read everything sealed to it, every input's opening included: a local chain only, whatever the
     // flag says

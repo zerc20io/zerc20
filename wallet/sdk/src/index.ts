@@ -31,6 +31,7 @@ export {
   type ChainConfig,
   type Circuit,
   type Network,
+  type ProverTrust,
   NITRO_ROOT_SHA256,
   checkNetwork,
   networkFromJson,

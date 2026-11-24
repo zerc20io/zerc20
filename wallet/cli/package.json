@@ -1,0 +1,48 @@
+{
+  "name": "@zerc20/cli",
+  "version": "0.1.0",
+  "description": "A zERC20 account from the terminal: watch one by its view key, pay from one by its recovery phrase, and run a merge prover of your own.",
+  "type": "module",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerc20io/zERC20v2.git",
+    "directory": "wallet/cli"
+  },
+  "bin": {
+    "zerc20": "dist/main.js"
+  },
+  "files": [
+    "dist",
+    "src",
+    "networks",
+    "skill"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --config vitest.config.ts",
+    "test:e2e": "scripts/e2e.sh"
+  },
+  "dependencies": {
+    "@scure/bip39": "^2.4.0",
+    "@zerc20/storage-sdk": "file:../../storage/sdk",
+    "@zerc20/wallet-sdk": "file:../sdk",
+    "viem": "2.57.7"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3",
+    "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "overrides": {
+    "underscore": "1.13.8"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

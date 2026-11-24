@@ -59,14 +59,15 @@ attester, the relayers, the indexer.
 
 ## Run
 
-| env                                 |                                                                                                                                                                                                                                                                   |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ENCLAVE_CID`                       | the enclave's CID (default 17)                                                                                                                                                                                                                                    |
-| `DEV_ENCLAVE=1`                     | development, instead: runs the enclave's logic in this process, which then sees every witness                                                                                                                                                                     |
-| `DEV_SKIP_PROOF=1`                  | development, with `DEV_ENCLAVE=1`: checks each witness and answers an all-zero proof, without the merge keys. Only a merge verifier that accepts anything (`Deploy.s.sol` with `DEV_ACCEPT_ALL_MERGES`, anvil only) takes it. The enclave binary has no such path |
-| `ARTIFACTS_DIR`                     | the merge decider keys (default `zkp/artifacts/merge`), streamed into the enclave at start                                                                                                                                                                        |
-| `QUEUE`, `PER_CLIENT`, `MAX_INPUTS` | default 8, 2, 100                                                                                                                                                                                                                                                 |
-| `LISTEN`                            | default `127.0.0.1:3006`                                                                                                                                                                                                                                          |
+| env                                 |                                                                                                                                                                                                                                                                          |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ENCLAVE_CID`                       | the enclave's CID (default 17)                                                                                                                                                                                                                                           |
+| `SELF_HOSTED=1`                     | for the wallets of this machine, instead: runs the enclave's logic in this process, on a loopback `LISTEN` only, without CORS and for requests whose `Host` names this machine, and takes only the merge keys whose SHA-256 `MERGE_PK_SHA256` and `MERGE_VK_SHA256` name |
+| `DEV_ENCLAVE=1`                     | development, instead: runs the enclave's logic in this process, which then sees every witness                                                                                                                                                                            |
+| `DEV_SKIP_PROOF=1`                  | development, with `DEV_ENCLAVE=1`: checks each witness and answers an all-zero proof, without the merge keys. Only a merge verifier that accepts anything (`Deploy.s.sol` with `DEV_ACCEPT_ALL_MERGES`, anvil only) takes it. The enclave binary has no such path        |
+| `ARTIFACTS_DIR`                     | the merge decider keys (default `zkp/artifacts/merge`), streamed into the enclave at start                                                                                                                                                                               |
+| `QUEUE`, `PER_CLIENT`, `MAX_INPUTS` | default 8, 2, 100                                                                                                                                                                                                                                                        |
+| `LISTEN`                            | default `127.0.0.1:3006`                                                                                                                                                                                                                                                 |
 
 ```sh
 cargo test -p zerc20-merge-prover
@@ -76,6 +77,14 @@ SPEED=fast MERGE=1 KEEP=1 wallet/sdk/scripts/e2e.sh   # through wallets, wallet/
 `scripts/dev-stack.sh` runs this node with `MERGE=1`, proving, which needs the merge keys (`npm run artifacts:setup --
 merge` in `zkp/`) and about 16 GB of memory. With `SPEED=fast` alone it runs it with `DEV_SKIP_PROOF=1`, which needs
 neither.
+
+## Run your own
+
+A wallet's owner can prove their own merges, on the machine the wallet is on: no enclave is needed where the prover
+sees only witnesses that machine holds already. `zerc20 prover start` (`@zerc20/cli`) fetches the merge keys, checks
+them and runs this node with `SELF_HOSTED=1`; `zerc20 merge --prover local` then seals the merge to it. The wallet SDK
+takes such a prover (`mergeProver.trust: { local: true }`) at a loopback address alone, so it cannot stand in for the
+network's.
 
 ## Deploy on Nitro
 

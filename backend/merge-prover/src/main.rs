@@ -1,16 +1,21 @@
-//! The merge prover's host: queues proofs, keeps the enclave loaded with the merge keys, and never sees a witness. It
+//! The merge prover's host: queues proofs, keeps the enclave loaded with the merge keys, and never sees a witness,
+//! unless it runs the enclave's logic itself: in development, or self-hosted for the wallets of its own machine. It
 //! serves every chain: a statement names its own.
-use alloy_primitives::{Bytes, U256};
+use alloy_primitives::{Bytes, U256, hex};
 use anyhow::{Result, anyhow, bail};
 use axum::Router;
-use axum::extract::{Json, Path, State};
-use axum::http::{HeaderMap, StatusCode};
+use axum::extract::{Json, Path, Request as HttpRequest, State};
+use axum::http::uri::Authority;
+use axum::http::{HeaderMap, StatusCode, header};
+use axum::middleware::{self, Next};
+use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use parking_lot::Mutex;
 use serde::Deserialize;
 use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::fs::File;
+use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::Notify;
@@ -77,9 +82,35 @@ impl App {
 #[tokio::main]
 async fn main() -> Result<()> {
     init_logging()?;
-    let skip = std::env::var("DEV_SKIP_PROOF").is_ok_and(|v| v == "1");
-    let enclave = match std::env::var("DEV_ENCLAVE").is_ok_and(|v| v == "1") {
-        true => {
+    let on = |name: &str| std::env::var(name).is_ok_and(|v| v == "1");
+    let (own, dev, skip) = (on("SELF_HOSTED"), on("DEV_ENCLAVE"), on("DEV_SKIP_PROOF"));
+    let listen = std::env::var("LISTEN").unwrap_or("127.0.0.1:3006".into());
+    let enclave = match (own, dev) {
+        (true, _) => {
+            if dev || skip {
+                bail!(
+                    "SELF_HOSTED proves for real networks: without DEV_ENCLAVE and DEV_SKIP_PROOF"
+                );
+            }
+            // the witnesses it sees are those of wallets on this machine, which hold them already
+            if !listen
+                .parse::<SocketAddr>()
+                .is_ok_and(|a| a.ip().is_loopback())
+            {
+                bail!(
+                    "SELF_HOSTED serves this machine only: LISTEN {listen} is not a loopback address"
+                );
+            }
+            info!(
+                "SELF_HOSTED: the enclave's logic runs in this process, for the wallets of this machine"
+            );
+            let e = Arc::new(Enclave::new(Some((
+                key_sha256("MERGE_PK_SHA256")?,
+                key_sha256("MERGE_VK_SHA256")?,
+            ))));
+            Target::local(Arc::new(move |r, body| e.handle(r, body)))?
+        }
+        (false, true) => {
             warn!(
                 "DEV_ENCLAVE: the enclave's logic runs in this process, which then sees every witness. Never where \
                  funds are real."
@@ -96,8 +127,10 @@ async fn main() -> Result<()> {
             });
             Target::local(Arc::new(move |r, body| e.handle(r, body)))?
         }
-        false if skip => bail!("DEV_SKIP_PROOF needs DEV_ENCLAVE=1: an enclave always proves"),
-        false => Target::Vsock(env_u64("ENCLAVE_CID", 17).try_into()?, PORT),
+        (false, false) if skip => {
+            bail!("DEV_SKIP_PROOF needs DEV_ENCLAVE=1: an enclave always proves")
+        }
+        (false, false) => Target::Vsock(env_u64("ENCLAVE_CID", 17).try_into()?, PORT),
     };
     let app = Arc::new(App {
         enclave,
@@ -112,15 +145,18 @@ async fn main() -> Result<()> {
         format!("{dir}/merge_decider_pk.bin"),
         format!("{dir}/merge_decider_vk.bin"),
     );
-    let listen = std::env::var("LISTEN").unwrap_or("127.0.0.1:3006".into());
     info!("serving merge proofs on {listen}");
     let router = Router::new()
         .route("/enclave", get(enclave_info))
         .route("/proofs", post(submit))
         .route("/proofs/{note_hash}", get(job))
         .route("/status", get(status))
-        .with_state(app.clone())
-        .layer(zerc20_common::cors());
+        .with_state(app.clone());
+    // a self-hosted prover answers the wallets of its machine, not a page some browser on it has open
+    let router = match own {
+        true => router.layer(middleware::from_fn(own_machine)),
+        false => router.layer(zerc20_common::cors()),
+    };
     tokio::select! {
         r = key_loop(app.clone(), keys), if !skip => r,
         r = work(app.clone()) => r,
@@ -128,7 +164,40 @@ async fn main() -> Result<()> {
     }
 }
 
-/// The key to seal witnesses to, and the attestation document over it (`null` in development).
+/// The SHA-256 of a merge key a self-hosted prover accepts, from the environment: what its operator pins, as an enclave
+/// image has it compiled in.
+fn key_sha256(name: &str) -> Result<[u8; 32]> {
+    let v = std::env::var(name)
+        .map_err(|_| anyhow!("SELF_HOSTED needs {name}: the merge key's SHA-256, hex"))?;
+    hex::decode(v)?
+        .try_into()
+        .map_err(|_| anyhow!("{name} is not 32 bytes"))
+}
+
+/// Whether a request's `Host` names this machine. A page that points its own name at this machine, once a browser has
+/// loaded it, is of this server's origin to that browser, and still sends its own name here.
+fn names_this_machine(host: &str) -> bool {
+    let authority = host.parse::<Authority>();
+    matches!(
+        authority.as_ref().map(Authority::host),
+        Ok("localhost" | "127.0.0.1" | "[::1]")
+    )
+}
+
+/// Refuses a request that does not name this machine.
+async fn own_machine(request: HttpRequest, next: Next) -> Response {
+    let host = request.headers().get(header::HOST);
+    match host
+        .and_then(|h| h.to_str().ok())
+        .is_some_and(names_this_machine)
+    {
+        true => next.run(request).await,
+        false => StatusCode::FORBIDDEN.into_response(),
+    }
+}
+
+/// The key to seal witnesses to, and the attestation document over it (`null` where the enclave's logic runs in this
+/// process).
 async fn enclave_info(State(app): State<Arc<App>>) -> Res {
     let info = app
         .ask(Request::Attestation, TIMEOUT)
@@ -333,4 +402,30 @@ async fn load(app: &App, pk: &str, vk: &str) -> Result<()> {
         .map_err(|e| anyhow!("the enclave: {e}"))?;
     info!("the enclave holds the merge keys");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::names_this_machine;
+
+    #[test]
+    fn a_self_hosted_prover_answers_only_a_host_that_names_its_machine() {
+        for host in [
+            "127.0.0.1:3006",
+            "localhost:3006",
+            "[::1]:3006",
+            "localhost",
+        ] {
+            assert!(names_this_machine(host), "{host}");
+        }
+        // a name pointed at 127.0.0.1 after its page loaded, and names that only look like this machine's
+        for host in [
+            "evil.example:3006",
+            "127.0.0.1.evil.example",
+            "localhost.evil.example:3006",
+            "",
+        ] {
+            assert!(!names_this_machine(host), "{host}");
+        }
+    }
 }

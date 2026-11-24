@@ -1,0 +1,153 @@
+{
+  "name": "mainnet",
+  "chains": [
+    {
+      "chainId": "1",
+      "rpcUrls": ["https://mainnet.gateway.tenderly.co", "https://ethereum-rpc.publicnode.com", "https://eth.drpc.org"],
+      "verifier": "0x4D14355C3fC905446908d70190eADf36F34DB711",
+      "depositAddressFactory": "0x565d49ef52430936695696a05418F56c1Edc8c9D",
+      "nativeCurrency": {
+        "name": "Ether",
+        "symbol": "ETH"
+      },
+      "indexer": "https://v2.zerc20.io/ethereum/indexer",
+      "asp": "https://v2.zerc20.io/ethereum/asp",
+      "attester": "https://v2.zerc20.io/ethereum/attester",
+      "attesterTrust": {
+        "pcr0": "6e0a5520d15b64997767781e7c8f8f8ec5cc3d4fefee34ae2f0613b139881906a30082869352126caffcd2e45d46586b",
+        "rootSha256": "641a0321a3e244efe456463195d606317ed7cdcc3c1756e09893f3c68f79bb5b"
+      },
+      "transactRelayer": "https://v2.zerc20.io/ethereum/transact-relayer",
+      "depositRelayer": "https://v2.zerc20.io/ethereum/deposit-relayer",
+      "priceFeeds": {
+        "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+        "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48": "0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6"
+      }
+    },
+    {
+      "chainId": "8453",
+      "rpcUrls": ["https://base.gateway.tenderly.co", "https://base-rpc.publicnode.com", "https://base.drpc.org"],
+      "verifier": "0x4D14355C3fC905446908d70190eADf36F34DB711",
+      "depositAddressFactory": "0x565d49ef52430936695696a05418F56c1Edc8c9D",
+      "nativeCurrency": {
+        "name": "Ether",
+        "symbol": "ETH"
+      },
+      "indexer": "https://v2.zerc20.io/base/indexer",
+      "asp": "https://v2.zerc20.io/base/asp",
+      "attester": "https://v2.zerc20.io/base/attester",
+      "attesterTrust": {
+        "pcr0": "6e0a5520d15b64997767781e7c8f8f8ec5cc3d4fefee34ae2f0613b139881906a30082869352126caffcd2e45d46586b",
+        "rootSha256": "641a0321a3e244efe456463195d606317ed7cdcc3c1756e09893f3c68f79bb5b"
+      },
+      "transactRelayer": "https://v2.zerc20.io/base/transact-relayer",
+      "depositRelayer": "https://v2.zerc20.io/base/deposit-relayer",
+      "priceFeeds": {
+        "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70",
+        "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913": "0x7e860098F58bBFC8648a4311b374B1D669a2bc6B"
+      }
+    },
+    {
+      "chainId": "42161",
+      "rpcUrls": [
+        "https://arbitrum.gateway.tenderly.co",
+        "https://arbitrum.drpc.org",
+        "https://arbitrum-one-rpc.publicnode.com"
+      ],
+      "verifier": "0x4D14355C3fC905446908d70190eADf36F34DB711",
+      "depositAddressFactory": "0x565d49ef52430936695696a05418F56c1Edc8c9D",
+      "nativeCurrency": {
+        "name": "Ether",
+        "symbol": "ETH"
+      },
+      "indexer": "https://v2.zerc20.io/arbitrum/indexer",
+      "asp": "https://v2.zerc20.io/arbitrum/asp",
+      "attester": "https://v2.zerc20.io/arbitrum/attester",
+      "attesterTrust": {
+        "pcr0": "6e0a5520d15b64997767781e7c8f8f8ec5cc3d4fefee34ae2f0613b139881906a30082869352126caffcd2e45d46586b",
+        "rootSha256": "641a0321a3e244efe456463195d606317ed7cdcc3c1756e09893f3c68f79bb5b"
+      },
+      "transactRelayer": "https://v2.zerc20.io/arbitrum/transact-relayer",
+      "depositRelayer": "https://v2.zerc20.io/arbitrum/deposit-relayer",
+      "priceFeeds": {
+        "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612",
+        "0xaf88d065e77c8cC2239327C5EDb3A432268e5831": "0x50834F3163758fcC1Df9973b6e91f0F0F0434aD3"
+      }
+    },
+    {
+      "chainId": "56",
+      "rpcUrls": ["https://bsc.rpc.blxrbdn.com", "https://bsc-rpc.publicnode.com"],
+      "verifier": "0x4D14355C3fC905446908d70190eADf36F34DB711",
+      "depositAddressFactory": "0x565d49ef52430936695696a05418F56c1Edc8c9D",
+      "nativeCurrency": {
+        "name": "BNB",
+        "symbol": "BNB"
+      },
+      "indexer": "https://v2.zerc20.io/bsc/indexer",
+      "asp": "https://v2.zerc20.io/bsc/asp",
+      "attester": "https://v2.zerc20.io/bsc/attester",
+      "attesterTrust": {
+        "pcr0": "6e0a5520d15b64997767781e7c8f8f8ec5cc3d4fefee34ae2f0613b139881906a30082869352126caffcd2e45d46586b",
+        "rootSha256": "641a0321a3e244efe456463195d606317ed7cdcc3c1756e09893f3c68f79bb5b"
+      },
+      "transactRelayer": "https://v2.zerc20.io/bsc/transact-relayer",
+      "depositRelayer": "https://v2.zerc20.io/bsc/deposit-relayer",
+      "priceFeeds": {
+        "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": "0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE"
+      }
+    },
+    {
+      "chainId": "137",
+      "rpcUrls": [
+        "https://polygon.gateway.tenderly.co",
+        "https://polygon.drpc.org",
+        "https://polygon-bor-rpc.publicnode.com"
+      ],
+      "verifier": "0x4D14355C3fC905446908d70190eADf36F34DB711",
+      "depositAddressFactory": "0x565d49ef52430936695696a05418F56c1Edc8c9D",
+      "nativeCurrency": {
+        "name": "POL",
+        "symbol": "POL"
+      },
+      "indexer": "https://v2.zerc20.io/polygon/indexer",
+      "asp": "https://v2.zerc20.io/polygon/asp",
+      "attester": "https://v2.zerc20.io/polygon/attester",
+      "attesterTrust": {
+        "pcr0": "6e0a5520d15b64997767781e7c8f8f8ec5cc3d4fefee34ae2f0613b139881906a30082869352126caffcd2e45d46586b",
+        "rootSha256": "641a0321a3e244efe456463195d606317ed7cdcc3c1756e09893f3c68f79bb5b"
+      },
+      "transactRelayer": "https://v2.zerc20.io/polygon/transact-relayer",
+      "depositRelayer": "https://v2.zerc20.io/polygon/deposit-relayer",
+      "priceFeeds": {
+        "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE": "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0",
+        "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359": "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7",
+        "0xE7C3D8C9a439feDe00D2600032D5dB0Be71C3c29": "0xD647a6fC9BC6402301583C91decC5989d8Bc382D"
+      }
+    }
+  ],
+  "storage": {
+    "host": "https://icp-api.io",
+    "canisterId": "vwfht-iiaaa-aaaah-qvcaq-cai"
+  },
+  "circuits": {
+    "joinsplit": {
+      "wasm": "https://artifacts.v2.zerc20.io/joinsplit/20261021T210800Z-98c5f43/joinsplit.wasm",
+      "zkey": "https://artifacts.v2.zerc20.io/joinsplit/20261021T210800Z-98c5f43/joinsplit.zkey",
+      "wasmSha256": "a882f34b6d2def47531df211c42c537650535e625dd6df0aeee4312572e6b617",
+      "zkeySha256": "56a874ad0866e320e99dcd6fa3b704419b39f197b1e71cacfd05c7168e3cce1e"
+    },
+    "rageexit": {
+      "wasm": "https://artifacts.v2.zerc20.io/rageexit/20261021T210800Z-98c5f43/rageexit.wasm",
+      "zkey": "https://artifacts.v2.zerc20.io/rageexit/20261021T210800Z-98c5f43/rageexit.zkey",
+      "wasmSha256": "7989df61756a462ed6eed81e28f2a70aa7b29d5bcc60a923aa49fb0b8bca3ba1",
+      "zkeySha256": "7bddbe80a0f5cf9efb2a781f40183f57d4426a484df078f96b4b57bd65d89587"
+    }
+  },
+  "mergeProver": {
+    "url": "https://prover.v2.zerc20.io",
+    "trust": {
+      "pcr0": "174d28202d136cf5d886b2c403577f1044d0cc58169dd3d8757e1604f187c7d1d21f8f9ebc6170a37dd2d6a272cbd684",
+      "rootSha256": "641a0321a3e244efe456463195d606317ed7cdcc3c1756e09893f3c68f79bb5b"
+    }
+  }
+}

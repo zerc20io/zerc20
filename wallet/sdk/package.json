@@ -1,6 +1,6 @@
 {
   "name": "@zerc20/wallet-sdk",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "A zERC20 wallet for browsers and Node: deposits, private payments, withdrawals and rage exits.",
   "type": "module",
   "license": "AGPL-3.0-only",
