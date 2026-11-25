@@ -803,7 +803,14 @@ export async function syncAll(ctx: Ctx): Promise<unknown[]> {
   const errors: unknown[] = [];
   const kept = <T>(p: Promise<T>): Promise<T | null> => p.catch((e: unknown) => (errors.push(e), null));
   const listed = await Promise.all(
-    ctx.chains.map((c) => kept(c.chain.tokens().then((ts) => [c.config.chainId, ts.map((t) => t.tokenId)] as const))),
+    ctx.chains.map((c) =>
+      kept(
+        c.chain.tokens().then((ts) => {
+          chainState(ctx, c.config.chainId).tokens = ts;
+          return [c.config.chainId, ts.map((t) => t.tokenId)] as const;
+        }),
+      ),
+    ),
   );
   const tokens = new Map(listed.filter((l) => l !== null));
   // storage announces a record once, and a refresh drops one of a chain or token it is not given: only with them all

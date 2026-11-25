@@ -332,8 +332,19 @@ export class Chain {
     });
   }
 
-  /** Every token the factory has registered, read once and then only the new ones. */
-  async tokens(): Promise<Token[]> {
+  /** Every token the factory has registered, read once and then only the new ones. While the first read fails,
+   * `saved` stands for it: what a wallet read of this chain before, so that a chain whose RPCs do not answer keeps no
+   * saved wallet from opening. A read that answers is what counts: it tells the tokens as the chain has them now. */
+  async tokens(saved?: Token[]): Promise<Token[]> {
+    try {
+      return await this.#readTokens();
+    } catch (e) {
+      if (this.#tokens.length > 0 || !saved) throw e;
+      return (this.#tokens = saved);
+    }
+  }
+
+  async #readTokens(): Promise<Token[]> {
     const factory = await this.#factory();
     const count = await this.client.readContract({ address: factory, abi: factoryAbi, functionName: 'tokenCount' });
     const known = this.#tokens;

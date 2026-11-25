@@ -558,8 +558,13 @@ export class Wallet {
     if (!loaded) await start(ctx, from);
     const wallet = new Wallet(ctx, unlock, hold);
     // a saved state names its tokens by id, and its coins stand by the chains' roots: read both now, so balances, coins
-    // and history work before the first sync
-    const [tokens] = await Promise.all([Promise.all(ctx.chains.map((c) => c.chain.tokens())), wallet.#readRoots()]);
+    // and history work before the first sync. A chain whose RPCs do not answer opens with the tokens saved of it, and a
+    // fresh state, which names none, with none: the sync that reads the chain finds them
+    const savedTokens = (chainId: bigint) => (loaded ? chainState(ctx, chainId).tokens : []);
+    const [tokens] = await Promise.all([
+      Promise.all(ctx.chains.map((c) => c.chain.tokens(savedTokens(c.config.chainId)))),
+      wallet.#readRoots(),
+    ]);
     wallet.#tokens = tokens.flat();
     keyAll(ctx, wallet.#tokens);
     // taken while it opened, before it listened

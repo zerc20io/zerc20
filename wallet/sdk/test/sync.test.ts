@@ -35,6 +35,8 @@ test('a chain whose tokens cannot be read holds back storage and itself, not ano
   expect(await syncAll(c)).toEqual([new Error('down')]);
   expect(synced(c)).toEqual([2n]);
   expect(c.state.storage).toBe(before); // not refreshed without every chain's tokens
+  // the tokens read are saved with the chain: a later open shows its records while its RPCs do not answer
+  expect(c.state.chains.map((s) => s.tokens)).toEqual([[{ tokenId: 1 }]]);
 });
 
 test('storage that fails holds back no chain', async () => {

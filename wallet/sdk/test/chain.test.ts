@@ -75,6 +75,21 @@ test('nothing is known before the tokens are read', () => {
   expect(chain().known).toEqual([]);
 });
 
+test('while the first read fails the tokens saved stand for it, and a later read adds only the new ones', async () => {
+  const saved = await chain().tokens();
+  const c = chain();
+  rpc.refusals = ['invalid'];
+  // with none saved the failure is the answer: a saved wallet names tokens that nothing else tells
+  await expect(c.tokens()).rejects.toThrow();
+  rpc.refusals = ['invalid'];
+  expect(await c.tokens(saved)).toBe(saved);
+  expect(c.known).toBe(saved);
+  rpc.count = 2;
+  const tokens = await c.tokens(saved);
+  expect(tokens.map((t) => t.symbol)).toEqual(['z1', 'z2']);
+  expect(tokens[0]).toBe(saved[0]);
+});
+
 test('a read that fails is not kept: the next call reads again, and its result is kept', async () => {
   const c = chain();
   rpc.refusals = ['invalid'];

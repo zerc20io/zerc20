@@ -6,7 +6,7 @@ import { parseArgs } from 'node:util';
 import { WalletError } from '@zerc20/wallet-sdk';
 import { Interrupted } from './account.js';
 import * as commands from './commands.js';
-import { Usage } from './errors.js';
+import { Usage, told } from './errors.js';
 import { until } from './format.js';
 import { proverStart } from './prover.js';
 import { installSkill, skillText } from './skill.js';
@@ -148,15 +148,17 @@ for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP'] as const) process.on(signal
 try {
   await main();
 } catch (e) {
+  // parseArgs names its errors by a string code; another library's code may be an object that cannot be read as one
+  const code = (e as { code?: unknown } | null)?.code;
   if (e instanceof Interrupted) process.exitCode = 130;
-  else if (e instanceof Usage || String((e as { code?: unknown }).code).startsWith('ERR_PARSE_ARGS')) {
+  else if (e instanceof Usage || (typeof code === 'string' && code.startsWith('ERR_PARSE_ARGS'))) {
     // parseArgs goes on to explain positionals that start with a dash
     console.error(`${(e as Error).message.split('. ')[0]}\nzerc20 --help shows every command.`);
     process.exitCode = 2;
   } else {
     // the message, and what caused it where a server out of reach did; whole where ZERC20_DEBUG asks, for a defect
     if (process.env.ZERC20_DEBUG || !(e instanceof Error)) console.error(e);
-    else for (let c: unknown = e; c instanceof Error; c = c.cause) console.error(c.message);
+    else console.error(told(e));
     const more = e instanceof WalletError ? hint(e) : null;
     if (more) console.error(more);
     process.exitCode = 1;

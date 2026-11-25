@@ -1,6 +1,6 @@
 {
   "name": "@zerc20/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A zERC20 account from the terminal: watch one by its view key, pay from one by its recovery phrase, and run a merge prover of your own.",
   "type": "module",
   "license": "AGPL-3.0-only",

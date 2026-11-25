@@ -17,7 +17,7 @@ import {
 } from '@zerc20/wallet-sdk';
 import { type Address, isAddress } from 'viem';
 import { type Key, keyIn, loadNetwork, openAccount, readKey, seedKey, stateFile } from './account.js';
-import { Failure, Usage } from './errors.js';
+import { Failure, Usage, told } from './errors.js';
 import {
   amount,
   chainName,
@@ -124,7 +124,7 @@ async function sync(s: Session, whole: boolean): Promise<void> {
   try {
     await s.wallet.sync();
   } catch (e) {
-    say(`Not all of it could be read: ${(e as Error).message}`);
+    say(`Not all of it could be read: ${e instanceof Error ? told(e) : String(e)}`);
     if (whole) process.exitCode = 1;
   }
   for (const op of s.wallet.operations()) {

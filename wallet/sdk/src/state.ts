@@ -8,6 +8,7 @@ import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex, hexToBytes, randomBytes } from '@noble/hashes/utils.js';
 import type { Receipt, SyncState } from '@zerc20/storage-sdk';
 import type { Hex } from 'viem';
+import type { Token } from './chain.js';
 import type { ErrorCode } from './errors.js';
 import type { Watch } from './scan.js';
 import type { SpendData } from './spend.js';
@@ -155,6 +156,9 @@ export interface ChainState {
   samples: Sample[];
   /** The next burn address index, per token. */
   burnNext: Record<number, number>;
+  /** The chain's tokens as last read: what the records here name by id, kept so that they still show while the chain's
+   * RPCs do not answer. */
+  tokens?: Token[];
 }
 
 /** An operation's progress, written before every step that leaves the device, so `sync` can resume it. */

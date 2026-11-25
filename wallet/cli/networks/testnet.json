@@ -80,7 +80,11 @@
     },
     {
       "chainId": "97",
-      "rpcUrls": ["https://bsc-testnet-rpc.publicnode.com", "https://bsc-testnet.drpc.org"],
+      "rpcUrls": [
+        "https://bsc-testnet.publicnode.com",
+        "https://bsc-testnet-dataseed.bnbchain.org",
+        "https://bsc-testnet.drpc.org"
+      ],
       "verifier": "0x48F50a80114781d517C2EB869020FBd38C606AaA",
       "depositAddressFactory": "0x9114421432bb15B5BC9370F1951A61532EB56df6",
       "nativeCurrency": {
