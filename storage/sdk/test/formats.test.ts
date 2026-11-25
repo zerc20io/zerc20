@@ -1,6 +1,7 @@
 import { Principal } from '@icp-sdk/core/principal';
+import { DerivedPublicKey, TransportSecretKey } from '@icp-sdk/vetkeys';
 import { expect, test } from 'vitest';
-import { randomBytes, seal, sealTo } from '../src/crypto.js';
+import { randomBytes, seal, sealTo, unhex } from '../src/crypto.js';
 import {
   BURN_BLOCK,
   FR_BE,
@@ -24,7 +25,7 @@ import {
   targetPlaintext,
 } from '../src/formats.js';
 import { emptyState, exportState, importState } from '../src/sync.js';
-import { type ViewKey, viewKey } from '../src/viewKey.js';
+import { type ViewKey, openEscrow, viewKey } from '../src/viewKey.js';
 import { BLOB_LEN } from '../src/wire.js';
 
 const fill = (n: number, len: number) => new Uint8Array(len).fill(n);
@@ -248,4 +249,39 @@ test('a state comes back only for its own view key', () => {
   expect(importState(view, bytes)).toEqual(state);
   expect(importState({ ...view, address: fill(2, 20) }, bytes)).toBeNull();
   expect(importState({ ...view, seed: randomBytes(32) }, bytes)).toBeNull();
+});
+
+test('an escrow opens to its view key by the vetKey encrypted to the auditor, in the bytes the canisters hold', () => {
+  // The escrow public key of a known secret, the vetKey it gives for one registration encrypted to a transport key,
+  // and a view seed sealed to that registration: fixed bytes, as every registration in a canister keeps its escrow
+  // for as long as it stands, and a vetKD library that read them otherwise would lock the auditor out of them all.
+  const escrowPublicKey = DerivedPublicKey.deserialize(
+    unhex(
+      'a1d6ff62c0ecab6c144a940fb8f87469ebfc81bac7dfd534ccf5c9805138f17b4d25d21e0b3ace6e29eb339a44f497230424c44efb3532f5b075e61f43fae55ea23df5f7bcad61c9b991e60509a3808770d4332d1a1519668b1c9a42d0dc8039',
+    ),
+  );
+  const transport = (key: string) => TransportSecretKey.deserialize(unhex(key));
+  const encrypted = unhex(
+    '90c4db413ef0b21e6fbbb2ed99a40b666f3fee305371b058c10f196645ec868a6ea9bbc59f16eec4a3399d7c5dea680cac6fff52796c18250877489805e6b7b5cc4b19dcdfa98762ef792c4f388b68bccbd755caa2c3ffc50f20cae95a57163c0d5807380e0247d81f1d136a6ee42b9518df694c5791cae37ccdef69dc0cb6424b32e7c0adeed7448650d9ce3449befab7b70abcc9f9f844e08d6c2ea60b39c6f6d5cd02224fc7766038a17eb452859b4117efe5e746836f3db15650702c479d',
+  );
+  const registration = {
+    address: unhex('5d646b727980878e959ca3aab1b8bfc6cdd4dbe2'),
+    public_key: fill(1, 32),
+    notify_key: unhex('e9f0f7fe050c131a21282f363d444b525960676e757c838a91989fa6adb4bbc2'),
+    escrow: unhex(
+      '494320494245000196da7614a3943e051c25752e7b5e91c61ec8d74a0c252af6971eba8a2ddfe08d042bbefe4eaa4d682077366b2a6b14d4084f8a54e705a23645957b10a120579ac158235f316d884e74b316306e0be5db3632f00e7aa94364b551555ec734e1ffdf0888a972a7aab12dad0c4d8850da014c0bd0b7daaec835d97f3dcb4e56dd728683b69836ffdbe22775821edfe23ef2a8e401d3f986797bde76325d488e30e7',
+    ),
+    expiry_ns: 0n,
+    signature: new Uint8Array(),
+  };
+  const mine = transport('1f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8');
+  expect(openEscrow(encrypted, mine, escrowPublicKey, registration)).toEqual({
+    address: registration.address,
+    seed: unhex('171e252c333a41484f565d646b727980878e959ca3aab1b8bfc6cdd4dbe2e9f0'),
+  });
+  // another transport key reads another point, which is no vetKey of this registration
+  const other = transport('2f262d343b424950575e656c737a81888f969da4abb2b9c0c7ced5dce3eaf1f8');
+  expect(openEscrow(encrypted, other, escrowPublicKey, registration)).toBeNull();
+  // nor does the vetKey open the escrow of a registration with another notify key
+  expect(openEscrow(encrypted, mine, escrowPublicKey, { ...registration, notify_key: fill(2, 32) })).toBeNull();
 });

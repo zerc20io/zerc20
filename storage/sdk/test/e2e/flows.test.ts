@@ -6,7 +6,7 @@
 // Build the wasm first: cargo build --release --target wasm32-unknown-unknown -p zerc20_storage
 
 import type { PocketIc } from '@dfinity/pic';
-import { TransportSecretKey } from '@dfinity/vetkeys';
+import { TransportSecretKey } from '@icp-sdk/vetkeys';
 import { HttpAgent } from '@icp-sdk/core/agent';
 import { IDL } from '@icp-sdk/core/candid';
 import { Ed25519KeyIdentity } from '@icp-sdk/core/identity';

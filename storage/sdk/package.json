@@ -1,6 +1,6 @@
 {
   "name": "@zerc20/storage-sdk",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "TypeScript SDK for zerc20-storage: private note delivery for zERC20 on the Internet Computer.",
   "type": "module",
   "license": "MIT",
@@ -30,8 +30,8 @@
     "demo": "node demo/serve.ts"
   },
   "dependencies": {
-    "@dfinity/vetkeys": "~0.4.0",
     "@icp-sdk/core": "^6.1.1",
+    "@icp-sdk/vetkeys": "~0.7.0",
     "@noble/ciphers": "^2.3.0",
     "@noble/curves": "^2.3.0",
     "@noble/hashes": "^2.3.0",

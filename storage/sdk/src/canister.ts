@@ -2,7 +2,7 @@
 
 import { Actor, type ActorSubclass, type Agent, HttpAgent } from '@icp-sdk/core/agent';
 import { Principal } from '@icp-sdk/core/principal';
-import { DerivedPublicKey } from '@dfinity/vetkeys';
+import { DerivedPublicKey } from '@icp-sdk/vetkeys';
 import { idlFactory, type Action, type CanisterError, type Registration, type Result, type Service } from './candid.js';
 import { hex } from './crypto.js';
 import { REGISTER_POW_BITS, actionsDigest, registerDigest, requiredPowBits, solvePow } from './wire.js';
